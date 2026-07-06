@@ -1,0 +1,12 @@
+{
+  "_comment": "Reference only. The bridge is configured through environment variables (see README / the Unraid template), not this file. Values below are placeholders — replace them.",
+  "SCRUTINY_API": "http://scrutiny:8080/api",
+  "TG_TOKEN_FILE": "/app/telegram.token",
+  "TG_CHAT": "-1001234567890",
+  "TG_THREAD": "12",
+  "PORT": "8091",
+  "HOST_LABEL": "nas",
+  "BASELINES": {
+    "0x5000c5000000abcd": { "187": 2 }
+  }
+}

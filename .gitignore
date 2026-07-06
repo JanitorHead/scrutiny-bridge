@@ -1,0 +1,8 @@
+# secrets — never commit
+telegram.token
+*.token
+config.local.json
+
+# python
+__pycache__/
+*.pyc

@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>scrutiny-bridge</Name>
+  <Repository>python:3.12-slim</Repository>
+  <Registry>https://hub.docker.com/_/python</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support/>
+  <Project>https://github.com/JanitorHead/scrutiny-bridge</Project>
+  <Overview>Notification bridge for Scrutiny: suppresses reviewed per-disk/per-attribute SMART baselines (which Scrutiny cannot ignore) and forwards everything else to Telegram as a readable message. Stdlib only, no build.</Overview>
+  <Category>Tools:</Category>
+  <WebUI/>
+  <Icon>https://raw.githubusercontent.com/AnalogJ/scrutiny/master/webapp/frontend/src/assets/images/logo/scrutiny-logo-dark.svg</Icon>
+  <ExtraParams/>
+  <PostArgs>sh /app/start.sh</PostArgs>
+  <CPUset/>
+  <DateInstalled/>
+  <Description>Sits between Scrutiny's webhook and Telegram. Re-reads current SMART state from Scrutiny's API, drops alerts whose only flagged attributes are whitelisted baselines, forwards the rest.</Description>
+  <Networking><Mode>bridge</Mode></Networking>
+  <Data/>
+  <Environment>
+    <Variable><Name>SCRUTINY_API</Name><Value>http://scrutiny:8080/api</Value><Mode/></Variable>
+    <Variable><Name>TG_CHAT</Name><Value></Value><Mode/></Variable>
+    <Variable><Name>TG_THREAD</Name><Value></Value><Mode/></Variable>
+    <Variable><Name>HOST_LABEL</Name><Value></Value><Mode/></Variable>
+    <Variable><Name>BASELINES</Name><Value>{}</Value><Mode/></Variable>
+    <Variable><Name>PORT</Name><Value>8091</Value><Mode/></Variable>
+  </Environment>
+  <Config Name="Webhook puerto" Target="8091" Default="8091" Mode="tcp" Description="Puerto HTTP donde el bridge recibe el webhook de Scrutiny." Type="Port" Display="always" Required="true" Mask="false">8091</Config>
+  <Config Name="App dir" Target="/app" Default="" Mode="rw" Description="Codigo del bridge (app.py, start.sh) + telegram.token." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/scrutiny-bridge</Config>
+  <Config Name="SCRUTINY_API" Target="SCRUTINY_API" Default="http://scrutiny:8080/api" Mode="" Description="Base URL de la API de Scrutiny." Type="Variable" Display="advanced" Required="true" Mask="false">http://scrutiny:8080/api</Config>
+  <Config Name="TG_CHAT" Target="TG_CHAT" Default="" Mode="" Description="Chat/grupo de Telegram (ej. -100...)." Type="Variable" Display="always" Required="true" Mask="false"></Config>
+  <Config Name="TG_THREAD" Target="TG_THREAD" Default="" Mode="" Description="Topic id dentro del grupo (opcional)." Type="Variable" Display="always" Required="false" Mask="false"></Config>
+  <Config Name="HOST_LABEL" Target="HOST_LABEL" Default="" Mode="" Description="Etiqueta mostrada en la cabecera del mensaje (opcional)." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="BASELINES" Target="BASELINES" Default="{}" Mode="" Description="JSON: baselines revisados a suprimir. { wwn: { attr_id: max_raw } }." Type="Variable" Display="advanced" Required="false" Mask="false">{}</Config>
+  <Config Name="PORT" Target="PORT" Default="8091" Mode="" Description="Puerto interno." Type="Variable" Display="advanced" Required="false" Mask="false">8091</Config>
+</Container>
