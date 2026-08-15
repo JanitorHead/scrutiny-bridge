@@ -37,9 +37,11 @@ TG_THREAD = _env("TG_THREAD", "")             # forum topic id (optional)
 PORT = int(_env("PORT", "8091"))
 HOST_LABEL = _env("HOST_LABEL", "")           # shown in the message header (optional)
 
-# Whitelisted baselines: { "<wwn>": { "<attr_id>": <max_raw_value> } }
+# Whitelisted baselines: { "<wwn>": { "<attr_id>": <max_raw_value> | null } }
 # An attribute flagged by Scrutiny is suppressed only if its raw value is <= the baseline.
 # Anything new, or a baselined value that has grown, still gets through.
+# A null baseline ignores the attribute's raw value entirely — for rolling counters whose
+# raw is meaningless noise (e.g. 195 "Hardware ECC Recovered" on Seagate drives).
 try:
     BASELINES = json.loads(_env("BASELINES", "{}"))
 except json.JSONDecodeError:
@@ -151,8 +153,11 @@ def attr_is_baselined(wwn, attr_id, raw_value):
     dev = BASELINES.get(wwn) or {}
     if str(attr_id) not in dev:
         return False
+    baseline = dev[str(attr_id)]
+    if baseline is None:
+        return True  # reviewed: raw is a meaningless rolling counter -> always suppress
     try:
-        return float(raw_value) <= float(dev[str(attr_id)])
+        return float(raw_value) <= float(baseline)
     except (TypeError, ValueError):
         return False
 

@@ -185,13 +185,25 @@ You can list several disks and several attributes:
 }
 ```
 
+A baseline of `null` ignores the attribute's raw value entirely. Use it for attributes whose
+raw is a meaningless rolling counter — the classic case is `195` *"Hardware ECC Recovered"* on
+Seagate drives, whose raw fluctuates by hundreds of millions between polls and carries no
+health signal:
+
+```json
+{ "0x5000c5000000abcd": { "195": null } }
+```
+
+Other attributes on the same disk still alert normally.
+
 **Finding the values:**
 
 - **WWN** — shown on each disk's page in the Scrutiny dashboard, or via `GET /api/summary`.
 - **Attribute id** — the SMART id (e.g. `187`, `5`, `197`), shown in the attribute table on the
   disk's page.
-- **Baseline value** — the current raw value you've decided is stable. Only set a baseline for a
-  value you have actually reviewed and understand.
+- **Baseline value** — the current raw value you've decided is stable, or `null` to ignore the
+  raw entirely (rolling counters). Only set a baseline for a value you have actually reviewed
+  and understand.
 
 ## What the notifications look like
 
