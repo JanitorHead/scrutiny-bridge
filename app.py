@@ -36,6 +36,7 @@ TG_CHAT = _env("TG_CHAT", "")                 # e.g. -1001234567890
 TG_THREAD = _env("TG_THREAD", "")             # forum topic id (optional)
 PORT = int(_env("PORT", "8091"))
 HOST_LABEL = _env("HOST_LABEL", "")           # shown in the message header (optional)
+MESSAGE_LANGUAGE = _env("MESSAGE_LANGUAGE", "es")  # language of the Telegram messages: es | en
 
 # Whitelisted baselines: { "<wwn>": { "<attr_id>": <max_raw_value> | null } }
 # An attribute flagged by Scrutiny is suppressed only if its raw value is <= the baseline.
@@ -220,8 +221,41 @@ def collect_reportable():
     return reportable
 
 
+# Telegram copy per MESSAGE_LANGUAGE. Add a language by adding a key with the same fields.
+MESSAGES = {
+    "es": {
+        "head": "Alerta SMART",
+        "unverified": "Scrutiny la marca con fallo (no pude leer los atributos).",
+        "critical": "crítico",
+        "trend": "baseline revisado %s → ahora %s, ha subido",
+        "raw": "valor bruto",
+        "advice": "Revisa el disco en Scrutiny. Si aparecen sectores pendientes (197/198) "
+                  "o el contador sigue subiendo, planifica el reemplazo.",
+        "test": "✅ <b>scrutiny-bridge</b> operativo.\n"
+                "Prueba recibida y reenviada correctamente. "
+                "Las alertas SMART reales llegarán por aquí (filtrando los baselines revisados).",
+    },
+    "en": {
+        "head": "SMART alert",
+        "unverified": "Scrutiny flags it as failing (could not read its attributes).",
+        "critical": "critical",
+        "trend": "reviewed baseline %s → now %s, it has grown",
+        "raw": "raw value",
+        "advice": "Check the disk in Scrutiny. If pending sectors (197/198) appear "
+                  "or the counter keeps growing, plan a replacement.",
+        "test": "✅ <b>scrutiny-bridge</b> is up.\n"
+                "Test received and forwarded. "
+                "Real SMART alerts will arrive here (with reviewed baselines filtered out).",
+    },
+}
+if MESSAGE_LANGUAGE not in MESSAGES:
+    print("[bridge] WARN: unknown MESSAGE_LANGUAGE %r, using es" % MESSAGE_LANGUAGE, flush=True)
+    MESSAGE_LANGUAGE = "es"
+T = MESSAGES[MESSAGE_LANGUAGE]
+
+
 def build_message(reportable):
-    head = "🔴 <b>Alerta SMART</b>"
+    head = "🔴 <b>%s</b>" % T["head"]
     if HOST_LABEL:
         head += " · " + esc(HOST_LABEL)
     lines = [head, ""]
@@ -233,19 +267,17 @@ def build_message(reportable):
         cap = human_bytes(d.get("capacity"))
         lines.append("💽 <b>%s</b> — %s · SN %s · %s" % (name, model, serial, cap))
         if item.get("unverified"):
-            lines.append("   ⚠️ Scrutiny la marca con fallo (no pude leer los atributos).")
+            lines.append("   ⚠️ " + T["unverified"])
         for a in item["attrs"]:
-            crit = " ⚠️crítico" if a["critical"] else ""
+            crit = " ⚠️" + T["critical"] if a["critical"] else ""
             trend = ""
             if a.get("baseline") is not None:
-                trend = " (baseline revisado %s → ahora %s, ha subido)" % (
-                    esc(a["baseline"]), esc(a.get("raw")))
-            lines.append("   • <b>%s %s</b>%s: valor bruto <b>%s</b>%s" % (
-                esc(a["id"]), esc(a["name"]), crit,
+                trend = " (" + T["trend"] % (esc(a["baseline"]), esc(a.get("raw"))) + ")"
+            lines.append("   • <b>%s %s</b>%s: %s <b>%s</b>%s" % (
+                esc(a["id"]), esc(a["name"]), crit, T["raw"],
                 esc(a.get("raw_string") or a.get("raw")), trend))
         lines.append("")
-    lines.append("👉 Revisa el disco en Scrutiny. Si aparecen sectores pendientes "
-                 "(197/198) o el contador sigue subiendo, planifica el reemplazo.")
+    lines.append("👉 " + T["advice"])
     return "\n".join(lines).strip()
 
 
@@ -257,11 +289,7 @@ def handle_notification(raw_body):
 
     if looks_like_test(raw_body, parsed):
         log("test notification received")
-        ok = send_telegram(
-            "✅ <b>scrutiny-bridge</b> operativo.\n"
-            "Prueba recibida y reenviada correctamente. "
-            "Las alertas SMART reales llegarán por aquí (filtrando los baselines revisados)."
-        )
+        ok = send_telegram(T["test"])
         return "test", ok
 
     reportable = collect_reportable()

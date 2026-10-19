@@ -14,7 +14,7 @@ send or not send a Telegram message.
 
 <img src="docs/telegram-alert.png" alt="Two Telegram messages from the bridge: the test confirmation, and an alert for disk sdc whose reviewed baseline on attribute 187 went from 2 to 5" width="620">
 
-*The bridge's own message text (`build_message()`), rendered with sample disk data.*
+*The bridge's own message text (`build_message()` with `MESSAGE_LANGUAGE=en`), rendered with sample disk data.*
 
 ---
 
@@ -166,6 +166,7 @@ All configuration is through environment variables:
 | `TG_TOKEN_FILE` | `/app/telegram.token`       | Path to a file holding the Telegram bot token. |
 | `TG_TOKEN`      | *(empty)*                   | Alternative to the file: token straight from the env. |
 | `HOST_LABEL`    | *(empty)*                   | Optional label shown in the message header (e.g. the machine's name). |
+| `MESSAGE_LANGUAGE` | `es`                     | Language of the Telegram messages: `es` (Spanish) or `en` (English). |
 | `BASELINES`     | `{}`                        | JSON whitelist of reviewed baselines — see below. |
 
 ### Baselines — the whitelist
@@ -222,17 +223,17 @@ Other attributes on the same disk still alert normally.
 **Anything else is forwarded to Telegram**, e.g. when a baselined counter has grown:
 
 ```
-🔴 Alerta SMART · nas
+🔴 SMART alert · nas
 
 💽 sdc — ExampleDrive 4TB · SN EX00-000-0001 · 3.6 TB
-   • 187 Reported Uncorrectable Errors ⚠️crítico: valor bruto 5 (baseline revisado 2 → ahora 5, ha subido)
+   • 187 Reported Uncorrectable Errors ⚠️critical: raw value 5 (reviewed baseline 2 → now 5, it has grown)
 
-👉 Revisa el disco en Scrutiny. Si aparecen sectores pendientes (197/198) o el contador sigue subiendo, planifica el reemplazo.
+👉 Check the disk in Scrutiny. If pending sectors (197/198) appear or the counter keeps growing, plan a replacement.
 ```
 
-> **Message language:** the alert copy ships in Spanish (the author's language). It's just plain
-> strings in `app.py` (`build_message` and the test handler) — edit them for your own wording or
-> translate them to whatever you like.
+> **Message language:** messages come in Spanish by default (the author's language); set
+> `MESSAGE_LANGUAGE=en` for English. The copy lives in the `MESSAGES` table in `app.py`: edit it
+> for your own wording, or add a language with the same keys.
 
 ## How the filter decides
 
