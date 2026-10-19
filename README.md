@@ -12,6 +12,10 @@ baseline you've whitelisted, and forwards everything else as a readable message.
 It never touches Scrutiny's stored health data, so it's completely safe: the worst it can do is
 send or not send a Telegram message.
 
+<img src="docs/telegram-alert.png" alt="Two Telegram messages from the bridge: the test confirmation, and an alert for disk sdc whose reviewed baseline on attribute 187 went from 2 to 5" width="620">
+
+*The bridge's own message text (`build_message()`), rendered with sample disk data.*
+
 ---
 
 ## The problem
